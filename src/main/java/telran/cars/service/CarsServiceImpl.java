@@ -116,20 +116,20 @@ public class CarsServiceImpl implements CarsService {
 
 	@Override
 	public List<CarDto> getOwnerCars(long id) {
-		 CarOwner owner = owners.get(id);
-		 List<CarDto> ownerCars = new ArrayList<>();
+		CarOwner owner = owners.get(id);
+		List<CarDto> ownerCars = new ArrayList<>();
 
-		    if (owner != null) {
-		        for (Car car : owner.getCars()) {
-		            ownerCars.add(car.build());
-		        }
-		    } else {
-		        log.error("Owner with id %d is not in the database", id);
-		        throw new IllegalArgumentException(String.format("Owner with id %d is not in the database", id));
-		    }
-
-		    return ownerCars;
+		if (owner != null) {
+			for (Car car : owner.getCars()) {
+				ownerCars.add(car.build());
+			}
+		} else {
+			log.error("Owner with id %d is not in the database", id);
+			throw new IllegalArgumentException(String.format("Owner with id %d is not in the database", id));
 		}
+
+		return ownerCars;
+	}
 
 	@Override
 	public PersonDto getCarOwner(String carNumber) {
