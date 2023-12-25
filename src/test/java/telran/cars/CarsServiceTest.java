@@ -3,6 +3,7 @@ package telran.cars;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.Collections;
+import java.util.IllegalFormatConversionException;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -47,7 +48,6 @@ import telran.cars.service.CarsService;
 		carsService.purchase(new TradeDealDto(CAR_NUMBER_1, PERSON_ID_1));
 	}
 	
-    
 	@Test
 	void testAddPerson() {
 		assertEquals(personDto, carsService.addPerson(personDto));
@@ -58,6 +58,8 @@ import telran.cars.service.CarsService;
 	@Test
 	void testAddCar() {
 		assertEquals(car2, carsService.addCar(car2));
+		assertThrowsExactly(IllegalFormatConversionException.class,
+				()->carsService.addCar(car2));
 	}
 
 	@Test
@@ -70,7 +72,7 @@ import telran.cars.service.CarsService;
 	void testDeleteCar() {
 		 carsService.addCar(car2);
 		 carsService.deleteCar("222-22-222");
-		 assertEquals(car2, carsService.addCar(car2));
+	 	 assertEquals(car2, carsService.addCar(car2));
 	}
 
 	@Test

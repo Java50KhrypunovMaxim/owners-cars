@@ -2,6 +2,8 @@ package telran.cars.service;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.IllegalFormatConversionException;
+import java.util.IllegalFormatConversionException;
 import java.util.List;
 import java.util.Map;
 
@@ -20,7 +22,9 @@ public class CarsServiceImpl implements CarsService {
 	HashMap<Long, CarOwner> owners = new HashMap<>();
 	HashMap<String, Car> cars = new HashMap<>();
 	HashMap<Long, List<String>> dealToCarsMap = new HashMap<>();
-
+	
+	
+	@Override
 	public void removeAll () {
 		owners.clear();
 		cars.clear();
@@ -31,6 +35,7 @@ public class CarsServiceImpl implements CarsService {
 	public PersonDto addPerson (PersonDto personDto) {
 		long id = personDto.id();
 		if (owners.containsKey(id)) {
+			log.error("Person with id %d already exists", id);
             throw new IllegalStateException(String.format("Person with id %d already exists", id));
         }
         CarOwner newCarOwner = new CarOwner(personDto);
@@ -44,7 +49,7 @@ public class CarsServiceImpl implements CarsService {
 		String number = carDto.number();
 		if (cars.containsKey(number) ){
 			log.error("car with number %d already exists", number);
-			throw new NotFoundException(String.format("car with number %d already exists", number));
+			 throw new NotFoundException(String.format("Car with number %d already exists", number));
 		}
 		 Car newCar = new Car(carDto);
 		 cars.put(number, newCar);
@@ -63,15 +68,14 @@ public class CarsServiceImpl implements CarsService {
 		 owners.put(id, newCarOwner);
 		 log.debug("person with id {} has been update", id);
 		 return personDto;
-
-		
 	}
 
 	@Override
 	public PersonDto deletePerson(long id) {
 		if (!owners.containsKey(id)) {
 		log.error("person with id %d is not in the database", id);
-		throw new IllegalStateException(String.format("person with id %d is not in the database", id));}
+		throw new IllegalStateException(String.format("person with id %d is not in the database", id));
+		}
 		CarOwner deleteCarOwner = owners.get(id);
 		owners.remove(id);
 		log.debug("person with id {} has been delete", id);
@@ -80,7 +84,6 @@ public class CarsServiceImpl implements CarsService {
 
 	@Override
 	public CarDto deleteCar(String carNumber) {
-		
 		if (!cars.containsKey(carNumber)) {
 			log.error("car with number %s is not in the database", carNumber);
 			throw new IllegalStateException(String.format("car with number %d is not in the database", carNumber));}
@@ -97,20 +100,16 @@ public class CarsServiceImpl implements CarsService {
 	        log.error("Person with id %d is not in the database", id);
 	        throw new IllegalStateException(String.format("Person with id %d is not in the database", id));
 	    }
-	    
 	    String carNumber = tradeDeal.carNumber();
 	    Car car = cars.get(carNumber);
-
 	    if (car == null) {
 	        log.error("Car with number %s is not in the database", carNumber);
 	        throw new IllegalStateException(String.format("Car with number %s is not in the database", carNumber));
 	    }
-
 	    CarOwner owner = owners.get(id);
 	    car.setOwner(owner);
 	    owner.addCar(car);
 	    log.debug("Deal has been added");
-
 	    return tradeDeal;
 	}
 
@@ -118,7 +117,6 @@ public class CarsServiceImpl implements CarsService {
 	public List<CarDto> getOwnerCars(long id) {
 		CarOwner owner = owners.get(id);
 		List<CarDto> ownerCars = new ArrayList<>();
-
 		if (owner != null) {
 			for (Car car : owner.getCars()) {
 				ownerCars.add(car.build());
@@ -134,7 +132,6 @@ public class CarsServiceImpl implements CarsService {
 	@Override
 	public PersonDto getCarOwner(String carNumber) {
 		 Car car = cars.get(carNumber);
-
 		    if (car != null && car.getOwner() != null) {
 		        return car.getOwner().build();
 		    } else {
