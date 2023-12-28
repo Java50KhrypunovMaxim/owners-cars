@@ -3,10 +3,13 @@ package telran.cars;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
+import java.util.List;
+
 import static telran.cars.api.ValidationConstants.*;
 import jakarta.validation.constraints.*;
 import org.junit.jupiter.api.Test;
@@ -36,10 +39,12 @@ class CarsControllerTest {
 	static final String WRONG_EMAIL_ADDRESS = "kuku";
 	static final String EMAIL_ADDRESS = "vasya@gmail.com";
 	private static final Long WRONG_PERSON_ID = 123l;
+	
 	@MockBean //inserting into Application Context Mock instead of real Service implementation
 	CarsService carsService;
 	@Autowired //for injection of MockMvc from Application Context
 	MockMvc mockMvc;
+	List<String> expected = List.of("Model: BMW, Count: 2");
 	CarDto carDto = new CarDto(CAR_NUMBER, "model");
 	CarDto carDtoWrongNumber = new CarDto("88-123", "mode123");
 	CarDto carDtoMissingNumber = new CarDto(null, "mode123");
@@ -305,6 +310,16 @@ class CarsControllerTest {
 		assertEquals(WRONG_CAR_NUMBER_MESSAGE, response);
 	}
 	
-	}
+	@Test
+	void testmostPopularModels() throws Exception {
+	
+		when(carsService.mostPopularModels()).thenReturn(expected);
+		String jsonExpected = mapper.writeValueAsString(expected);
+		String actualJSON = mockMvc.perform(get("http://localhost:8080/cars/mostPopularModels").contentType(MediaType.APPLICATION_JSON)
+				.content(jsonExpected)).andExpect(status().isOk()).andReturn().getResponse()
+		.getContentAsString();
+		assertEquals(jsonExpected, actualJSON );
+		}
+}
 	
 

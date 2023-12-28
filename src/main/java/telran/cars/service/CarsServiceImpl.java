@@ -1,143 +1,146 @@
 package telran.cars.service;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.IllegalFormatConversionException;
-import java.util.IllegalFormatConversionException;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 import lombok.extern.slf4j.Slf4j;
-import telran.cars.dto.CarDto;
-import telran.cars.dto.PersonDto;
-import telran.cars.dto.TradeDealDto;
+import telran.cars.dto.*;
 import telran.cars.exceptions.NotFoundException;
-import telran.cars.service.model.Car;
-import telran.cars.service.model.CarOwner;
-@Service
+import telran.cars.service.model.*;
 @Slf4j
+@Service("carsService")
+@Scope("prototype")
 public class CarsServiceImpl implements CarsService {
-	HashMap<Long, CarOwner> owners = new HashMap<>();
-	HashMap<String, Car> cars = new HashMap<>();
-	HashMap<Long, List<String>> dealToCarsMap = new HashMap<>();
-	
-	
+HashMap<Long, CarOwner> owners = new HashMap<>();
+HashMap<String, Car> cars = new HashMap<>();
 	@Override
-	public void removeAll () {
-		owners.clear();
-		cars.clear();
-		dealToCarsMap.clear();
-	}
-	
-	@Override
-	public PersonDto addPerson (PersonDto personDto) {
+	public PersonDto addPerson(PersonDto personDto) {
 		long id = personDto.id();
-		if (owners.containsKey(id)) {
-			log.error("Person with id %d already exists", id);
-            throw new IllegalStateException(String.format("Person with id %d already exists", id));
-        }
-        CarOwner newCarOwner = new CarOwner(personDto);
-        owners.put(id, newCarOwner);
-        log.debug("car with number {} has been saved",id);
-        return personDto;
-    }
+		if(owners.containsKey(id)) {
+			throw new IllegalStateException(String.format("person  %d already exists", id));
+		}
+		owners.put(id, new CarOwner(personDto));
+		return personDto;
+	}
 
 	@Override
 	public CarDto addCar(CarDto carDto) {
-		String number = carDto.number();
-		if (cars.containsKey(number) ){
-			log.error("car with number %d already exists", number);
-			 throw new NotFoundException(String.format("Car with number %d already exists", number));
+		String carNumber = carDto.number();
+		if(cars.containsKey(carNumber)) {
+			throw new IllegalStateException(String.format("car %s already exists", carNumber));
 		}
-		 Car newCar = new Car(carDto);
-		 cars.put(number, newCar);
-		 log.debug("car with number {} has been saved", number);
-		 return carDto;
+		cars.put(carNumber, new Car(carDto));
+		return carDto;
 	}
 
 	@Override
 	public PersonDto updatePerson(PersonDto personDto) {
 		long id = personDto.id();
-		if (!owners.containsKey(id)) {
-			log.error("person with id %d is not in the database", id);
-			throw new IllegalStateException(String.format("person with id %d is not in the database", id));}
-		 owners.remove(id);
-		 CarOwner newCarOwner = new CarOwner(personDto);
-		 owners.put(id, newCarOwner);
-		 log.debug("person with id {} has been update", id);
-		 return personDto;
+		hasCarOwner(id);
+		CarOwner carOwner = owners.get(id);
+		carOwner.setEmail(personDto.email());
+		return personDto;
 	}
 
 	@Override
 	public PersonDto deletePerson(long id) {
-		if (!owners.containsKey(id)) {
-		log.error("person with id %d is not in the database", id);
-		throw new IllegalStateException(String.format("person with id %d is not in the database", id));
-		}
-		CarOwner deleteCarOwner = owners.get(id);
+		
+		hasCarOwner(id);
+		CarOwner carOwner = owners.get(id);
+		List<Car> cars = carOwner.getCars();
+		cars.forEach(c -> c.setOwner(null));
 		owners.remove(id);
-		log.debug("person with id {} has been delete", id);
-		return deleteCarOwner.build();
+		return carOwner.build();
+	}
+
+	private void hasCarOwner(long id) {
+		if(!owners.containsKey(id)) {
+			throw new NotFoundException(String.format("person %d doesn't exists", id));
+		}
 	}
 
 	@Override
 	public CarDto deleteCar(String carNumber) {
-		if (!cars.containsKey(carNumber)) {
-			log.error("car with number %s is not in the database", carNumber);
-			throw new IllegalStateException(String.format("car with number %d is not in the database", carNumber));}
-			Car deleteCar = cars.get(carNumber);
-			cars.remove(carNumber);
-			log.debug("person with id {} has been delete", carNumber);
-			return deleteCar.build();
+		hasCar(carNumber);
+		Car car = cars.get(carNumber);
+		CarOwner carOwner = car.getOwner();
+		
+		carOwner.getCars().remove(car);
+		cars.remove(carNumber);
+		return car.build();
+	}
+
+	private void hasCar(String carNumber) {
+		if(!cars.containsKey(carNumber)) {
+			throw new NotFoundException(String.format("car %s doesn't exists", carNumber));
+		}
 	}
 
 	@Override
 	public TradeDealDto purchase(TradeDealDto tradeDeal) {
-		Long id = tradeDeal.personId();
-	    if (!owners.containsKey(id)) {
-	        log.error("Person with id %d is not in the database", id);
-	        throw new IllegalStateException(String.format("Person with id %d is not in the database", id));
-	    }
-	    String carNumber = tradeDeal.carNumber();
-	    Car car = cars.get(carNumber);
-	    if (car == null) {
-	        log.error("Car with number %s is not in the database", carNumber);
-	        throw new IllegalStateException(String.format("Car with number %s is not in the database", carNumber));
-	    }
-	    CarOwner owner = owners.get(id);
-	    car.setOwner(owner);
-	    owner.addCar(car);
-	    log.debug("Deal has been added");
-	    return tradeDeal;
+		log.debug("purchase: received car {}, owner {}", tradeDeal.carNumber(), tradeDeal.personId());
+		Long personId = tradeDeal.personId();
+		
+		CarOwner carOwner = null;
+		String carNumber = tradeDeal.carNumber();
+		hasCar(carNumber);
+		Car car = cars.get(carNumber);
+		CarOwner oldOwner = car.getOwner();
+		checkSameOwner(personId, oldOwner);
+		if(oldOwner != null) {
+			oldOwner.getCars().remove(car);
+		}
+		if(personId != null) {
+			
+			log.debug("new owner exists");
+			hasCarOwner(personId);
+			carOwner = owners.get(personId);
+			carOwner.getCars().add(car);
+		}
+		car.setOwner(carOwner);
+		return tradeDeal;
+	}
+
+	private void checkSameOwner(Long personId, CarOwner oldOwner) {
+		if((oldOwner == null && personId == null) ||
+				(oldOwner != null && personId == oldOwner.getId())) {
+			throw new IllegalStateException("trade deal with same owner");
+		}
+		
 	}
 
 	@Override
 	public List<CarDto> getOwnerCars(long id) {
-		CarOwner owner = owners.get(id);
-		List<CarDto> ownerCars = new ArrayList<>();
-		if (owner != null) {
-			for (Car car : owner.getCars()) {
-				ownerCars.add(car.build());
-			}
-		} else {
-			log.error("Owner with id %d is not in the database", id);
-			throw new IllegalArgumentException(String.format("Owner with id %d is not in the database", id));
-		}
-
-		return ownerCars;
+		hasCarOwner(id);
+		return owners.get(id).getCars().stream().map(Car::build).toList();
 	}
 
 	@Override
 	public PersonDto getCarOwner(String carNumber) {
-		 Car car = cars.get(carNumber);
-		    if (car != null && car.getOwner() != null) {
-		        return car.getOwner().build();
-		    } else {
-		        log.error("Car with number %s or its owner not found in the database", carNumber);
-		        throw new IllegalArgumentException(String.format("Car with number %s or its owner not found in the database", carNumber));
-		    }
+		hasCar(carNumber);
+		Car car = cars.get(carNumber);
+		CarOwner carOwner = car.getOwner();
+		return carOwner != null ? carOwner.build() : null;
 	}
 
+	@Override
+	public List<String> mostPopularModels() {
+		Map<String, Integer> carModelsCount = new HashMap<>();
+		 owners.values().forEach(owner ->
+	        owner.groupCarModelsCount().forEach((model, count) ->
+	            carModelsCount.put(model, carModelsCount.getOrDefault(model, 0) + count)
+	        )
+	    );
+
+	    int maxCount = carModelsCount.values().stream().max(Integer::compareTo).orElse(0);
+	    
+	    return carModelsCount.entrySet().stream()
+	            .filter(entry -> entry.getValue() == maxCount)
+	            .map(entry -> "Model: " + entry.getKey() + ", Count: " + entry.getValue())
+	            .collect(Collectors.toList());
+	}
+	
 }
