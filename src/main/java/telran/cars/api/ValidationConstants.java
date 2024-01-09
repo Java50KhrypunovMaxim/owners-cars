@@ -1,6 +1,5 @@
 package telran.cars.api;
 
-
 public interface ValidationConstants {
 	String MISSING_CAR_NUMBER_MESSAGE = "Missing car number";
 	String CAR_NUMBER_REGEXP = "(\\d{3}-\\d{2}-\\d{3})|(\\d{2}-\\d{3}-\\d{2})";
