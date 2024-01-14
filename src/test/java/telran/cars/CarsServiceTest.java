@@ -32,17 +32,20 @@ class CarsServiceTest {
 	private static final String BIRTH_DATE_1 = "2000-10-10";
 	private static final String EMAIL1 = "name1@gmail.com";
 	private static final Long PERSON_ID_2 = 124l;
+	private static final Long PERSON_ID_3 = 125l;
+	private static final Long PERSON_ID_4 = 126l;
+	private static final Long PERSON_ID_5 = 127l;
 	private static final String NAME2 = "name2";
 	private static final String BIRTH_DATE_2 = "2000-10-10";
 	private static final String EMAIL2 = "name2@gmail.com";
 	private static final Long PERSON_ID_NOT_EXISTS = 1111111111L;
 	
 	private static final  String NEW_EMAIL = "name1@tel-ran.co.il";
-	CarDto car1 = new CarDto(CAR_NUMBER_1, MODEL1);
-	CarDto car2 = new CarDto(CAR_NUMBER_2, MODEL1);
-	CarDto car3 = new CarDto(CAR_NUMBER_3, MODEL2);
-	CarDto car4 = new CarDto(CAR_NUMBER_4, MODEL2);
-	CarDto car5 = new CarDto(CAR_NUMBER_5, MODEL3);
+	CarDto car1 = new CarDto(CAR_NUMBER_1, MODEL1, 2023,PERSON_ID_3, CarColors.BLACK, 2000, CarState.NEW);
+	CarDto car2 = new CarDto(CAR_NUMBER_2, MODEL1, 2023,PERSON_ID_1, CarColors.RED, 2500, CarState.GOOD);
+	CarDto car3 = new CarDto(CAR_NUMBER_3, MODEL2, 2021,PERSON_ID_2, CarColors.GREEN, 1600, CarState.MIDDLE);
+	CarDto car4 = new CarDto(CAR_NUMBER_4, MODEL2, 2022,PERSON_ID_4, CarColors.WHITE, 1800, CarState.GOOD);
+	CarDto car5 = new CarDto(CAR_NUMBER_5, MODEL3, 2020,PERSON_ID_5, CarColors.BLACK, 3000, CarState.BAD);
 	PersonDto personDto = new PersonDto(PERSON_ID_NOT_EXISTS, NAME1, BIRTH_DATE_1, EMAIL1);
 	PersonDto personDto1 = new PersonDto(PERSON_ID_1, NAME1, BIRTH_DATE_1, EMAIL1);
 	PersonDto personDto2 = new PersonDto(PERSON_ID_2, NAME2, BIRTH_DATE_2, EMAIL2);
@@ -58,8 +61,8 @@ class CarsServiceTest {
 			carsService.addCar(car2);
 			carsService.addPerson(personDto1);
 			carsService.addPerson(personDto2);
-			carsService.purchase(new TradeDealDto(CAR_NUMBER_1, PERSON_ID_1));
-			carsService.purchase(new TradeDealDto(CAR_NUMBER_2, PERSON_ID_2));
+			carsService.purchase(new TradeDealDto(CAR_NUMBER_1, PERSON_ID_1, "2023-11-12"));
+			carsService.purchase(new TradeDealDto(CAR_NUMBER_2, PERSON_ID_2, "2023-5-5"));
 		
 		
 	}
@@ -112,7 +115,7 @@ class CarsServiceTest {
 
 	@Test
 	void testPurchaseNewCarOwner() {
-		TradeDealDto tradeDeal = new TradeDealDto(CAR_NUMBER_1, PERSON_ID_2);
+		TradeDealDto tradeDeal = new TradeDealDto(CAR_NUMBER_1, PERSON_ID_2, "2023-5-5");
 		assertEquals(tradeDeal, carsService.purchase(tradeDeal));
 		assertEquals(personDto2, carsService.getCarOwner(CAR_NUMBER_1));
 		assertFalse(carsService.getOwnerCars(PERSON_ID_1).contains(car1));
@@ -121,23 +124,23 @@ class CarsServiceTest {
 	}
 	@Test
 	void testPurchaseNotFound() {
-		TradeDealDto tradeDealCarNotFound = new TradeDealDto(CAR_NUMBER_3, PERSON_ID_1);
+		TradeDealDto tradeDealCarNotFound = new TradeDealDto(CAR_NUMBER_3, PERSON_ID_1, "2023-5-5");
 		TradeDealDto tradeDealOwnerNotFound = new TradeDealDto(CAR_NUMBER_1,
-				PERSON_ID_NOT_EXISTS);
+				PERSON_ID_NOT_EXISTS, "2023-5-5");
 		assertThrowsExactly(NotFoundException.class, () -> carsService.purchase(tradeDealOwnerNotFound));
 		assertThrowsExactly(NotFoundException.class, () -> carsService.purchase(tradeDealCarNotFound));
 		
 	}
 	@Test
 	void testPurchaseNoCarOwner() {
-		TradeDealDto tradeDeal = new TradeDealDto(CAR_NUMBER_1,null);
+		TradeDealDto tradeDeal = new TradeDealDto(CAR_NUMBER_1,null, "2023-5-5");
 		assertEquals(tradeDeal, carsService.purchase(tradeDeal));
 		assertFalse(carsService.getOwnerCars(PERSON_ID_1).contains(car1));
 		assertNull(carsService.getCarOwner(CAR_NUMBER_1));
 	}
 	@Test
 	void testPurchaseSameOwner() {
-		TradeDealDto tradeDeal = new TradeDealDto(CAR_NUMBER_1,PERSON_ID_1);
+		TradeDealDto tradeDeal = new TradeDealDto(CAR_NUMBER_1,PERSON_ID_1,"2023-5-5");
 		assertThrowsExactly(IllegalStateException.class,
 				() -> carsService.purchase(tradeDeal));
 	}
@@ -156,15 +159,15 @@ class CarsServiceTest {
 		PersonDto ownerActual = carsService.getCarOwner(CAR_NUMBER_1);
 		assertEquals(personDto1, ownerActual);
 		assertThrowsExactly(NotFoundException.class, () -> carsService.getCarOwner(CAR_NUMBER_3));
-	}
+	} 
 	@Test
 	void testMostPopularModels() {
 		carsService.addCar(car3);
 		carsService.addCar(car4);
 		carsService.addCar(car5);
-		carsService.purchase(new TradeDealDto(CAR_NUMBER_3, PERSON_ID_1));
-		carsService.purchase(new TradeDealDto(CAR_NUMBER_4, PERSON_ID_2));
-		carsService.purchase(new TradeDealDto(CAR_NUMBER_5, PERSON_ID_2));
+		carsService.purchase(new TradeDealDto(CAR_NUMBER_3, PERSON_ID_1, "2023-5-5"));
+		carsService.purchase(new TradeDealDto(CAR_NUMBER_4, PERSON_ID_2, "2023-7-7"));
+		carsService.purchase(new TradeDealDto(CAR_NUMBER_5, PERSON_ID_2, "2023-8-8"));
 		List<String> mostPopularModels = carsService.mostPopularModels();
 		String[] actual = mostPopularModels.toArray(String[]::new);
 		Arrays.sort(actual);

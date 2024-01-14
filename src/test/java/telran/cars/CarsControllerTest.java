@@ -22,14 +22,17 @@ import org.springframework.test.web.servlet.MockMvc;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import telran.cars.dto.CarColors;
 import telran.cars.dto.CarDto;
+import telran.cars.dto.CarState;
 import telran.cars.dto.PersonDto;
 import telran.cars.dto.TradeDealDto;
 import telran.cars.exceptions.NotFoundException;
 import telran.cars.service.CarsService;
 @WebMvcTest //inserting into Application Context Mock WEB server instead of real WebServer
 class CarsControllerTest {
-	private static final long PERSON_ID = 123000l;
+	private static final long PERSON_ID = 444444l;
+	private static final long PERSON_ID_3 = 1230007;
 	private static final String CAR_NUMBER = "123-01-002";
 	private static final String CAR_WRONG_NUMBER = "123-01";
 	private static final String PERSON_NOT_FOUND_MESSAGE = "person not found";
@@ -45,9 +48,9 @@ class CarsControllerTest {
 	@Autowired //for injection of MockMvc from Application Context
 	MockMvc mockMvc;
 	List<String> expected = List.of("Model: BMW, Count: 2");
-	CarDto carDto = new CarDto(CAR_NUMBER, "model");
-	CarDto carDtoWrongNumber = new CarDto("88-123", "mode123");
-	CarDto carDtoMissingNumber = new CarDto(null, "mode123");
+	CarDto carDto = new CarDto(CAR_NUMBER, "model", 2023, PERSON_ID_3, CarColors.BLACK, 2000, CarState.NEW);
+	CarDto carDtoWrongNumber = new CarDto("88-123", "mode123", 2021, PERSON_ID, CarColors.GREEN, 1600, CarState.MIDDLE);
+	CarDto carDtoMissingNumber = new CarDto(null, "model111", 2022,PERSON_ID_3, CarColors.WHITE, 1800, CarState.GOOD);
 	
 	
 	@Autowired //for injection of ObjectMapper from Application context
@@ -60,8 +63,8 @@ class CarsControllerTest {
 	PersonDto personNoId = new PersonDto(null, "Vasya", "2000-10-10", EMAIL_ADDRESS);
 	PersonDto personWrongId = new PersonDto(123l, "Vasya", "2000-10-10", EMAIL_ADDRESS);
 	
-	TradeDealDto tradeDeal = new TradeDealDto(CAR_NUMBER, PERSON_ID);
-	TradeDealDto tradeDealWrongCarNumber = new TradeDealDto(CAR_WRONG_NUMBER , PERSON_ID);
+	TradeDealDto tradeDeal = new TradeDealDto(CAR_NUMBER, PERSON_ID, "2023-11-12");
+	TradeDealDto tradeDealWrongCarNumber = new TradeDealDto(CAR_WRONG_NUMBER , PERSON_ID, "2023-11-12");
 
 	@Test
 	void testAddCar() throws Exception {
@@ -169,7 +172,7 @@ class CarsControllerTest {
 		String response = mockMvc.perform(post("http://localhost:8080/cars").contentType(MediaType.APPLICATION_JSON)
 				.content(jsonCarDto)).andExpect(status().isBadRequest()).andReturn().getResponse()
 		.getContentAsString();
-		assertEquals(CAR_ALREADY_EXISTS_MESSAGE, response );
+		assertEquals(WRONG_MAX_PERSON_ID_VALUE, response );
 		
 	}
 
@@ -269,7 +272,7 @@ class CarsControllerTest {
 		String response = mockMvc.perform(post("http://localhost:8080/cars").contentType(MediaType.APPLICATION_JSON)
 				.content(jsonPersonDto)).andExpect(status().isBadRequest())
 				.andReturn().getResponse().getContentAsString();
-		assertEquals(MISSING_CAR_NUMBER_MESSAGE, response);
+		assertEquals(WRONG_MAX_PERSON_ID_VALUE+";" + MISSING_CAR_NUMBER_MESSAGE, response);
 	}
 	@Test
 	void updatePersonWrongMaxIdTest() throws Exception {
