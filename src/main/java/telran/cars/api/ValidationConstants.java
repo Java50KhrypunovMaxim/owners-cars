@@ -15,7 +15,9 @@ public interface ValidationConstants {
 	int MIN_ENGINE_POWER = 70;
 	int MAX_ENGINE_POWER = 250;
 	int MAXIMUM_YEAR = 2024;
-	String WRONG_MAXIMUM_YEAR_MESSAGE = "Year must be greater or equal " + MAXIMUM_YEAR;
+	int MINIMUM_YEAR = 1970;
+	String WRONG_MAXIMUM_YEAR_MESSAGE = "Year must be less or equal " + MAXIMUM_YEAR;
+	String WRONG_MINIMUM_YEAR_MESSAGE = "Year must be greater or equal " + MINIMUM_YEAR;
 	String WRONG_MIN_ENGINE_POWER = "Engine power must be greater or equal" +  MIN_ENGINE_POWER;
 	String MAX_ENGINE_POWE = "Engine power must be less or equal " + MAX_ENGINE_POWER;
 	long MIN_PERSON_ID_VALUE = 100000l;

@@ -9,7 +9,8 @@ public record CarDto
 @Pattern(regexp = CAR_NUMBER_REGEXP, message=WRONG_CAR_NUMBER_MESSAGE) String number,
 
 @NotNull (message=MISSING_CAR_MODEL_MESSAGE) String model,
-@NotNull(message = MISSING_YEAR_MESSAGE) 
+@NotNull(message = MISSING_YEAR_MESSAGE)
+@Min(value = MINIMUM_YEAR, message = WRONG_MINIMUM_YEAR_MESSAGE) 
 @Max(value = MAXIMUM_YEAR, message = WRONG_MAXIMUM_YEAR_MESSAGE) 
 int year,
 
