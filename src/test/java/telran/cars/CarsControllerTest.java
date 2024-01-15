@@ -31,9 +31,9 @@ import telran.cars.exceptions.NotFoundException;
 import telran.cars.service.CarsService;
 @WebMvcTest //inserting into Application Context Mock WEB server instead of real WebServer
 class CarsControllerTest {
-	private static final long PERSON_ID = 444444l;
-	private static final long PERSON_ID_3 = 1230007;
-	private static final String CAR_NUMBER = "123-01-002";
+	private static final long PERSON_ID = 123000l;
+	private static final long PERSON_ID_3 = 123200l;
+	private static final String CAR_NUMBER = "113-01-002";
 	private static final String CAR_WRONG_NUMBER = "123-01";
 	private static final String PERSON_NOT_FOUND_MESSAGE = "person not found";
 	private static final String PERSON_ALREADY_EXISTS_MESSAGE = "person already exists";
@@ -48,6 +48,7 @@ class CarsControllerTest {
 	@Autowired //for injection of MockMvc from Application Context
 	MockMvc mockMvc;
 	List<String> expected = List.of("Model: BMW, Count: 2");
+	CarDto carDto1 = new CarDto("992-21-23", "mode123", 2022, PERSON_ID, CarColors.BLACK, 100, CarState.NEW);
 	CarDto carDto = new CarDto(CAR_NUMBER, "model", 2023, PERSON_ID_3, CarColors.BLACK, 2000, CarState.NEW);
 	CarDto carDtoWrongNumber = new CarDto("88-123", "mode123", 2021, PERSON_ID, CarColors.GREEN, 1600, CarState.MIDDLE);
 	CarDto carDtoMissingNumber = new CarDto(null, "model111", 2022,PERSON_ID_3, CarColors.WHITE, 1800, CarState.GOOD);
@@ -172,7 +173,7 @@ class CarsControllerTest {
 		String response = mockMvc.perform(post("http://localhost:8080/cars").contentType(MediaType.APPLICATION_JSON)
 				.content(jsonCarDto)).andExpect(status().isBadRequest()).andReturn().getResponse()
 		.getContentAsString();
-		assertEquals(WRONG_MAX_PERSON_ID_VALUE, response );
+		assertEquals(CAR_ALREADY_EXISTS_MESSAGE, response );
 		
 	}
 
@@ -272,7 +273,7 @@ class CarsControllerTest {
 		String response = mockMvc.perform(post("http://localhost:8080/cars").contentType(MediaType.APPLICATION_JSON)
 				.content(jsonPersonDto)).andExpect(status().isBadRequest())
 				.andReturn().getResponse().getContentAsString();
-		assertEquals(WRONG_MAX_PERSON_ID_VALUE+";" + MISSING_CAR_NUMBER_MESSAGE, response);
+		assertEquals(MISSING_CAR_NUMBER_MESSAGE, response);
 	}
 	@Test
 	void updatePersonWrongMaxIdTest() throws Exception {

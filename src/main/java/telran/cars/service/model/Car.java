@@ -8,7 +8,6 @@ import telran.cars.dto.CarDto;
 import telran.cars.dto.CarState;
 import jakarta.persistence.*;
 
-
 @Entity
 @Getter
 @Table(name="cars")
@@ -18,7 +17,7 @@ public class Car {
 	String number;
 	@ManyToOne
 	@JoinColumns({@JoinColumn(name="model_name", nullable = false),
-		@JoinColumn(name="model_year", nullable = false)})
+	@JoinColumn(name="model_year", nullable = false)})
 	Model model;
 	@ManyToOne
 	@JoinColumn(name="owner_id", nullable=true)
