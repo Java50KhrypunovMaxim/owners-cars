@@ -3,12 +3,14 @@ package telran.cars.service;
 import java.util.List;
 
 import telran.cars.dto.CarDto;
+import telran.cars.dto.ModelDto;
 import telran.cars.dto.PersonDto;
 import telran.cars.dto.TradeDealDto;
 
 public interface CarsService {
 PersonDto addPerson(PersonDto personDto);
 CarDto addCar(CarDto carDto);
+ModelDto addModel(ModelDto modelDto);
 PersonDto updatePerson(PersonDto personDto);
 PersonDto deletePerson(long id);
 CarDto deleteCar(String carNumber);

@@ -24,7 +24,6 @@ import telran.cars.service.CarsService;
 @RequestMapping("cars")
 @RequiredArgsConstructor
 @Slf4j
-
 public class CarsController {
 	final CarsService carsService;
 	@PostMapping
@@ -82,12 +81,4 @@ public class CarsController {
 		log.debug("getCarOwner: received car number {}", carNumber);
 		return carsService.getCarOwner(carNumber);
 	}
-	
-	@GetMapping ("mostPopularModels")
-	List<String> mostPopularModels() {
-        log.debug("Most Popular Models: have been received");
-        return carsService.mostPopularModels();
-    }
-	
-	
 }

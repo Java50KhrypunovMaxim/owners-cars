@@ -19,7 +19,7 @@ import telran.cars.exceptions.NotFoundException;
 
 @ControllerAdvice
 @Slf4j
-public class CarsExeptionsController {
+public class CarsExceptionsController {
 	public static String TYPE_MISMATCH_MESSAGE = "URL parameter has type mismatch";
 	public static String JSON_TYPE_MISMATCH_MESSAGE = "JSON contains field with type mismatch";	
 @ExceptionHandler(NotFoundException.class)

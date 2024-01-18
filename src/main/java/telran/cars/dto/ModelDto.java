@@ -6,21 +6,19 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 
-public record ModelDto(
-		@NotEmpty (message=MISSING_CAR_MODEL_MESSAGE) String model,
-		@Min(value = MINIMUM_YEAR, message = WRONG_MINIMUM_YEAR_MESSAGE) 
-		@Max(value = MAXIMUM_YEAR, message = WRONG_MAXIMUM_YEAR_MESSAGE) 
-		int year,
-		
-		@NotNull (message = MISSING_CAR_COMPANY_MESSAGE)
-		String company,
-		 
-	    @NotEmpty(message = MISSING_ENGINE_POWER_MESSAGE)
-	    @Min(value=MIN_ENGINE_POWER, message=WRONG_MIN_PERSON_ID_VALUE)
-		@Max(value=MAX_ENGINE_POWER, message=WRONG_MAX_PERSON_ID_VALUE )
-		int enginePower,
-		
-		@NotNull(message = MISSING_ENGINE_CAMPACITY_MESSAGE)
-		int engineCapacity
-	) {}
+@Getter
+@AllArgsConstructor
+public class ModelDto {
+	@NotEmpty(message=MISSING_MODEL_NAME_MESSAGE)
+	String modelName;
+	@NotEmpty(message=MISSING_MODEL_YEAR_MESSAGE)
+	@Min(value=MIN_MODEL_YEAR, message=WRONG_MIN_YEAR)
+	Integer modelYear;
+	@NotEmpty(message=MISSING_COMPANY_MESSAGE)
+	String company;
+	Integer enginePower;
+	Integer engineCapacity;
+}
