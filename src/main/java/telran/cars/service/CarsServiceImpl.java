@@ -1,27 +1,17 @@
 package telran.cars.service;
 
 import java.time.LocalDate;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.List;
 
-import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import telran.cars.exceptions.PersonNotFoundException;
 import telran.cars.dto.*;
-import telran.cars.exceptions.CarNotFoundException;
-import telran.cars.exceptions.IllegalCarsStateException;
-import telran.cars.exceptions.IllegalPersonsStateException;
-import telran.cars.exceptions.ModelIllegalStateException;
-import telran.cars.exceptions.NotFoundException;
-import telran.cars.exceptions.TradeDealIllegalStateException;
-import telran.cars.exceptions.ModelNotFoundException;
-import telran.cars.service.model.*;
+import telran.cars.exceptions.*;
 import telran.cars.repo.*;
-
+import telran.cars.service.model.*;
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -71,10 +61,7 @@ public class CarsServiceImpl implements CarsService {
 	public PersonDto deletePerson(long id) {
 		CarOwner carOwner = carOwnerRepo.findById(id)
 				.orElseThrow(()-> new PersonNotFoundException());
-		List<Car> carsForOwnerNull = carRepo.findByCarOwnerId(id);
-		carsForOwnerNull.forEach(c -> c.setCarOwner(null));
-		List<TradeDeal> dealsForOwnerNulling = tradeDealRepo.findByCarOwnerId(id);
-		dealsForOwnerNulling.forEach(d -> d.setCarOwner(null));
+		
 		carOwnerRepo.deleteById(id);
 		return carOwner.build();
 	}
@@ -83,8 +70,7 @@ public class CarsServiceImpl implements CarsService {
 	@Transactional
 	public CarDto deleteCar(String carNumber) {
 		Car car = carRepo.findById(carNumber).orElseThrow(() -> new CarNotFoundException());
-		List<TradeDeal> tradeDealsForDeleting = tradeDealRepo.findByCarNumber(carNumber);
-		tradeDealsForDeleting.forEach(tradeDealRepo::delete);
+		
 		CarDto res = car.build();
 		carRepo.deleteById(carNumber);
 		return res;
@@ -119,22 +105,32 @@ public class CarsServiceImpl implements CarsService {
 	}
 
 	@Override
+	@Transactional(readOnly=true)
 	public List<CarDto> getOwnerCars(long id) {
-		// Not Implemented yet
-		return null;
+		List<Car> cars = carRepo.findByCarOwnerId(id);
+		if (cars.isEmpty()) {
+			log.warn("person with id {} has no cars", id);
+		} else {
+			log.debug("person with id {} has {} cars {}",id, cars.size());
+		}
+		return cars.stream().map(Car::build).toList();
 	}
 
 	@Override
+	@Transactional(readOnly=true)
 	public PersonDto getCarOwner(String carNumber) {
-		// Not Implemented yet
-		return null;
+		Car car = carRepo.findById(carNumber)
+				.orElseThrow(() -> new CarNotFoundException());
+		CarOwner carOwner = car.getCarOwner();
+		return carOwner != null ? carOwner.build() : null;
 	}
 
 	@Override
-	public List<String> mostPopularModels() {
-		// Not Implemented yet
-		
-		return null;
+	public List<String> mostSoldModelNames() {
+		List<String> res = modelRepo.findMostSoldModelNames();
+		log.trace("most sold model names are {}", res);
+
+		return res;
 	}
 
 	@Override
@@ -147,6 +143,65 @@ public class CarsServiceImpl implements CarsService {
 		Model model = Model.of(modelDto);
 		modelRepo.save(model);
 		return modelDto;
+	}
+
+	@Override
+	public List<ModelNameAmount> mostPopularModelNames(int nModels) {
+		List<ModelNameAmount> res = modelRepo.findMostPopularModelNames(nModels);
+		res.forEach(mn -> log.debug("model name is {}, number of cars {}",
+				mn.getName(), mn.getAmount()));
+		return res;
+	}
+
+	@Override
+	/**
+	 * returns count of trade deals for a given 'modelName'
+	 * at a given year / month
+	 * Try to apply only interface method name without @Query annotation
+	 */
+	public long countTradeDealAtMonthModel(String modelName, int month, int year) {
+		LocalDate startDate = LocalDate.of(year, month, 1);
+		LocalDate endDate = startDate.plusMonths(1).minusDays(1);
+		long res = tradeDealRepo.countByCarModelModelYearNameAndDateBetween(modelName, startDate, endDate);
+		log.debug("model {} has {} tradeDeals in  {} month", modelName, res, month);
+		return res;
+		
+	}
+
+	@Override
+	/**
+	 * returns list of a given number of most popular (most cars amount)
+	 *  model names and appropriate amounts of the cars,
+	 * owners of which have an age in a given range
+	 */
+	public List<ModelNameAmount> mostPopularModelNameByOwnerAges(int nModels, int ageFrom, int ageTo) {
+		List<ModelNameAmount> res = carRepo.findMostPopularModelNameByOwnerAges(nModels, ageFrom, ageTo);
+		res.forEach(mn -> log.debug("For age between {} and {}, the model named '{}' has {} cars", ageFrom, ageTo,
+				mn.getName(), mn.getAmount()));
+		return res;
+	}
+
+	@Override
+	/**
+	 * returns one most popular color of a given model
+	 */
+	public String oneMostPopularColorModel(String model) {
+		String res = modelRepo.findOneMostPopularColorModel(model);
+		log.debug(" For model - {} most popular color is {}", model, res);
+		return res;
+	}
+
+	@Override
+	/**
+	 * returns minimal values of engine power and capacity
+	 * of car owners having an age in a given range
+	 */
+	public EnginePowerCapacity minEnginePowerCapacityByOwnerAges(int ageFrom, int ageTo) {
+		EnginePowerCapacity res = modelRepo.findMinEnginePowerCapacityByOwnerAges(ageFrom, ageTo);
+		log.debug("for owners having age from {} to {} min engine capacity is {}"
+				+ "and min engine power is {}", ageFrom, ageTo,
+				res.getEngineCapacity(),res.getEnginePower() );
+		return res;
 	}
 
 }
