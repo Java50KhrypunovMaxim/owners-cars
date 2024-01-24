@@ -13,24 +13,23 @@ import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
 import jakarta.persistence.*;
-@NoArgsConstructor
 @Entity
 @Getter
 @Table(name="cars")
-
+@NoArgsConstructor
 public class Car {
 	@Id
 	@Column(name="car_number")
 	String number;
 	@ManyToOne
 	@JoinColumns({@JoinColumn(name="model_name", nullable = false),
-	@JoinColumn(name="model_year", nullable = false)})
+		@JoinColumn(name="model_year", nullable = false)})
 	@Setter
 	Model model;
 	@ManyToOne
 	@JoinColumn(name="owner_id", nullable=true)
 	@Setter
-	@OnDelete(action=OnDeleteAction.SET_NULL)
+	@OnDelete(action = OnDeleteAction.SET_NULL)
 	CarOwner carOwner;
 	String color;
 	@Setter
@@ -38,6 +37,7 @@ public class Car {
 	@Enumerated(EnumType.STRING) // value in the table will be a string (by default a number)
 	@Column(name="car_state")
 	CarState state;
+	
 	
 	public static Car of(CarDto carDto) {
 		return new Car(carDto.number(),  carDto.color(), carDto.kilometers(), carDto.state());
@@ -51,5 +51,10 @@ public class Car {
 		this.kilometers = kilometers;
 		this.state = state;
 	}
-}
+	@Override
+	public String toString() {
+		return "Car [number=" + number + ", color=" + color + ", kilometers=" + kilometers + ", state=" + state + "]";
+	}
 	
+	
+}
